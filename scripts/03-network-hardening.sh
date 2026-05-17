@@ -71,13 +71,16 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
         log_info "UFW enabled with default policy"
     fi
 
-    # Allow SSH (always needed)
-    if ! run_quiet ufw status | grep -q '22/tcp'; then
-        run_quiet ufw allow 22/tcp comment 'SSH'
-        log_info "Added UFW rule for SSH (22/tcp)"
+    # Add rules for active services
+    # SSH — check if installed (ssh or sshd service)
+    if systemctl list-unit-files ssh.service 2>/dev/null | grep -q ssh || \
+       systemctl list-unit-files sshd.service 2>/dev/null | grep -q sshd; then
+        if ! run_quiet ufw status | grep -q '22/tcp'; then
+            run_quiet ufw allow 22/tcp comment 'SSH'
+            log_info "Added UFW rule for SSH (22/tcp)"
+        fi
     fi
 
-    # Add rules for active services
     # Postfix (SMTP) — check if installed
     if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
         for port in 25 587; do
@@ -142,26 +145,21 @@ ignoreip = 127.0.0.1/8
 
 '
 
-    # Always enable sshd jail (exception as per toolkit requirements)
-    jail_content+='[sshd]
+    # Check for SSH service and enable sshd jail only if installed
+    if systemctl list-unit-files ssh.service 2>/dev/null | grep -q ssh || \
+       systemctl list-unit-files sshd.service 2>/dev/null | grep -q sshd; then
+        jail_content+='[sshd]
 enabled = true
 port    = ssh
 logpath = %(sshd_log)s
 backend = %(sshd_backend)s
 
 '
-
-    # Recidive jail — punish repeat offenders across all jails
-    jail_content+='[recidive]
-enabled = true
-logpath = /var/log/fail2ban.log
-action  = iptables-multiport[name=recidive, port="http,https,ssh,smtp,pop3,imap", protocol=tcp]
-          sendmail-whois[name=recidive, dest=root@localhost]
-bantime = 86400
-findtime = 86400
-maxretry = 5
-
-'
+        log_info "Fail2ban: Enabled sshd jail"
+        recidive_ports="ssh"
+    else
+        recidive_ports=""
+    fi
 
     # Check for postfix and add jails if installed
     if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
@@ -178,6 +176,26 @@ backend = %(postfix_backend)s
 
 '
         log_info "Fail2ban: Enabled postfix jails (postfix-sasl, postfix-rate-limit)"
+        if [ -z "$recidive_ports" ]; then
+            recidive_ports="smtp,pop3,imap"
+        else
+            recidive_ports="$recidive_ports,smtp,pop3,imap"
+        fi
+    fi
+
+    # Recidive jail — punish repeat offenders across enabled jails
+    if [ -n "$recidive_ports" ]; then
+        jail_content+="[recidive]
+enabled = true
+logpath = /var/log/fail2ban.log
+action  = iptables-multiport[name=recidive, port=\"http,https,$recidive_ports\", protocol=tcp]
+          sendmail-whois[name=recidive, dest=root@localhost]
+bantime = 86400
+findtime = 86400
+maxretry = 5
+
+"
+        log_info "Fail2ban: Enabled recidive jail for ports: $recidive_ports"
     fi
 
     # Write the generated config
