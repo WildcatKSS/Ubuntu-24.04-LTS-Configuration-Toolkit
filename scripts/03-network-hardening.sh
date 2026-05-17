@@ -80,8 +80,10 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
         if echo "$inbound_services" | grep -qo '\bssh\b'; then
             if ! run_quiet ufw status | grep -q '22/tcp'; then
                 run_quiet ufw allow 22/tcp comment 'SSH'
-                log_info "Added UFW rule for SSH (22/tcp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+                log_info "UFW: Added rule for SSH (22/tcp) — service running and inbound-allowed"
             fi
+        else
+            log_info "UFW: SSH service running but NOT in INBOUND_ALLOWED_SERVICES — no external rule"
         fi
     fi
 
@@ -91,9 +93,11 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
             for port in 25 587; do
                 if ! run_quiet ufw status | grep -q "$port/tcp"; then
                     run_quiet ufw allow "$port/tcp" comment 'SMTP' || true
-                    log_info "Added UFW rule for SMTP ($port/tcp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+                    log_info "UFW: Added rule for SMTP ($port/tcp) — service running and inbound-allowed"
                 fi
             done
+        else
+            log_info "UFW: Postfix service running but NOT in INBOUND_ALLOWED_SERVICES — no external rules"
         fi
     fi
 
@@ -102,8 +106,10 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
         if echo "$inbound_services" | grep -qo '\bchronyd\b'; then
             if ! run_quiet ufw status | grep -q '123/udp'; then
                 run_quiet ufw allow 123/udp comment 'NTP' || true
-                log_info "Added UFW rule for NTP (123/udp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+                log_info "UFW: Added rule for NTP (123/udp) — service running and inbound-allowed"
             fi
+        else
+            log_info "UFW: Chrony service running but NOT in INBOUND_ALLOWED_SERVICES — no external rule"
         fi
     fi
 fi
@@ -164,10 +170,13 @@ port    = ssh
 logpath = %(sshd_log)s
 
 '
-        log_info "Fail2ban: Enabled sshd jail (service running)"
+        log_info "Fail2ban: Created sshd jail (service running)"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bssh\b'; then
             recidive_ports="ssh"
+            log_info "Fail2ban: SSH added to recidive (inbound-allowed)"
+        else
+            log_info "Fail2ban: SSH jail created but NOT in recidive (not in INBOUND_ALLOWED_SERVICES)"
         fi
     fi
 
@@ -181,7 +190,7 @@ port    = $postfix_ports
 logpath = /var/log/mail.log
 
 "
-        log_info "Fail2ban: Enabled postfix-sasl jail (service running)"
+        log_info "Fail2ban: Created postfix-sasl jail (service running)"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             if [ -z "$recidive_ports" ]; then
@@ -189,6 +198,9 @@ logpath = /var/log/mail.log
             else
                 recidive_ports="$recidive_ports,$postfix_ports"
             fi
+            log_info "Fail2ban: Postfix added to recidive (inbound-allowed): $postfix_ports"
+        else
+            log_info "Fail2ban: Postfix jail created but NOT in recidive (not in INBOUND_ALLOWED_SERVICES)"
         fi
     fi
 
@@ -204,7 +216,9 @@ findtime = 86400
 maxretry = 5
 
 "
-        log_info "Fail2ban: Enabled recidive jail for ports: $recidive_ports (inbound-allowed services only)"
+        log_info "Fail2ban: Created recidive jail protecting inbound services: $recidive_ports"
+    else
+        log_info "Fail2ban: Recidive jail NOT created (no inbound-allowed services running)"
     fi
 
     # Write the generated config
