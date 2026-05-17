@@ -232,7 +232,7 @@ questionnaire_run() {
     TIMEZONE=$(questionnaire_prompt_string "Timezone" "Europe/Amsterdam")
     export TIMEZONE
 
-    LOCALE=$(questionnaire_prompt_string "System language (locale)" "en_US.UTF-8")
+    LOCALE=$(questionnaire_prompt_string "System language (locale)" "nl_NL.UTF-8")
     export LOCALE
 
     echo
@@ -541,7 +541,7 @@ FALLBACK_NTP="time.cloudflare.com time.google.com"
 EOF
 
     echo "TIMEZONE=\"${TIMEZONE:-Europe/Amsterdam}\"" >> "$conf_file"
-    echo "LOCALE=\"${LOCALE:-en_US.UTF-8}\"" >> "$conf_file"
+    echo "LOCALE=\"${LOCALE:-nl_NL.UTF-8}\"" >> "$conf_file"
 
     cat >> "$conf_file" <<'EOF'
 
