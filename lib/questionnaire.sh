@@ -134,6 +134,11 @@ questionnaire_run() {
         return 0
     fi
 
+    # Pre-detect network interface for use in prompts
+    if [ -z "${NETWORK_INTERFACE:-}" ]; then
+        export NETWORK_INTERFACE="$(detect_network_interface)"
+    fi
+
     echo
     log_info "=== Ubuntu Toolkit Interactive Setup ==="
     echo
