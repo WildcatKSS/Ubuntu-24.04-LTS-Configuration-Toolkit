@@ -1,12 +1,10 @@
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║            Ubuntu Server 26.04 LTS Configuration Toolkit                    ║
-║                                                                              ║
-║   From bare metal to production-ready in one idempotent run                 ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-```
+# Ubuntu Server 26.04 LTS Configuration Toolkit
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ubuntu 26.04 LTS](https://img.shields.io/badge/Ubuntu-26.04%20LTS-orange)](https://releases.ubuntu.com/26.04/)
+![Bash 4.0+](https://img.shields.io/badge/bash-4.0+-blue)
+![Idempotent](https://img.shields.io/badge/idempotent-yes-brightgreen)
+![Status](https://img.shields.io/badge/status-active-success)
 
 A modular bash toolkit that takes a freshly installed Ubuntu Server 26.04 LTS system
 and configures it from bare to production-ready in one run: network, hardening,
