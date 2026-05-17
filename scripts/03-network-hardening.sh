@@ -165,7 +165,7 @@ ignoreip = 127.0.0.1/8
 enabled = true
 port    = ssh
 logpath = %(sshd_log)s
-backend = %(sshd_backend)s
+backend = systemd
 
 '
         log_info "Fail2ban: Enabled sshd jail"
@@ -181,12 +181,12 @@ backend = %(sshd_backend)s
 enabled = true
 port    = smtp,imap2,imaps,pop3,pop3s
 logpath = /var/log/mail.log
-backend = %(postfix_backend)s
+backend = systemd
 
 [postfix-rate-limit]
 enabled = true
 logpath = /var/log/mail.log
-backend = %(postfix_backend)s
+backend = systemd
 
 '
         log_info "Fail2ban: Enabled postfix jails (postfix-sasl, postfix-rate-limit)"
@@ -216,7 +216,7 @@ maxretry = 5
     fi
 
     # Write the generated config
-    if echo "$jail_content" > "$jail_config"; then
+    if printf '%s' "$jail_content" > "$jail_config"; then
         log_info "Generated $jail_config with dynamic service jails"
         systemctl restart fail2ban || log_warn "fail2ban restart failed (non-fatal)"
     else
