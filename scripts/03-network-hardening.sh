@@ -74,42 +74,36 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
     # Load inbound-allowed services from config (default: ssh)
     inbound_services="${INBOUND_ALLOWED_SERVICES:-ssh}"
 
-    # Add UFW rules for services that are both installed AND in inbound-allowed list
-    # SSH — check if installed and allowed inbound
-    ssh_installed=0
-    if dpkg -l 2>/dev/null | grep -q "^ii.*openssh-server"; then
-        ssh_installed=1
-    fi
-    if [ "$ssh_installed" -eq 1 ] && echo "$inbound_services" | grep -qo '\bssh\b'; then
-        if ! run_quiet ufw status | grep -q '22/tcp'; then
-            run_quiet ufw allow 22/tcp comment 'SSH'
-            log_info "Added UFW rule for SSH (22/tcp) — configured in INBOUND_ALLOWED_SERVICES"
+    # Add UFW rules for services that are both running AND in inbound-allowed list
+    # SSH — check if running and allowed inbound
+    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "ssh.service\|sshd.service"; then
+        if echo "$inbound_services" | grep -qo '\bssh\b'; then
+            if ! run_quiet ufw status | grep -q '22/tcp'; then
+                run_quiet ufw allow 22/tcp comment 'SSH'
+                log_info "Added UFW rule for SSH (22/tcp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+            fi
         fi
     fi
 
-    # Postfix (SMTP) — check if installed and allowed inbound
-    postfix_installed=0
-    if dpkg -l 2>/dev/null | grep -q "^ii.*postfix"; then
-        postfix_installed=1
-    fi
-    if [ "$postfix_installed" -eq 1 ] && echo "$inbound_services" | grep -qo '\bpostfix\b'; then
-        for port in 25 587; do
-            if ! run_quiet ufw status | grep -q "$port/tcp"; then
-                run_quiet ufw allow "$port/tcp" comment 'SMTP' || true
-                log_info "Added UFW rule for SMTP ($port/tcp) — configured in INBOUND_ALLOWED_SERVICES"
-            fi
-        done
+    # Postfix (SMTP) — check if running and allowed inbound
+    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "postfix.service"; then
+        if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
+            for port in 25 587; do
+                if ! run_quiet ufw status | grep -q "$port/tcp"; then
+                    run_quiet ufw allow "$port/tcp" comment 'SMTP' || true
+                    log_info "Added UFW rule for SMTP ($port/tcp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+                fi
+            done
+        fi
     fi
 
-    # Chronyd (NTP) — check if installed and allowed inbound (rarely needed)
-    chrony_installed=0
-    if dpkg -l 2>/dev/null | grep -q "^ii.*chrony"; then
-        chrony_installed=1
-    fi
-    if [ "$chrony_installed" -eq 1 ] && echo "$inbound_services" | grep -qo '\bchronyd\b'; then
-        if ! run_quiet ufw status | grep -q '123/udp'; then
-            run_quiet ufw allow 123/udp comment 'NTP' || true
-            log_info "Added UFW rule for NTP (123/udp) — configured in INBOUND_ALLOWED_SERVICES"
+    # Chrony/Chronyd (NTP) — check if running and allowed inbound (rarely needed)
+    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "chrony.service\|chronyd.service"; then
+        if echo "$inbound_services" | grep -qo '\bchronyd\b'; then
+            if ! run_quiet ufw status | grep -q '123/udp'; then
+                run_quiet ufw allow 123/udp comment 'NTP' || true
+                log_info "Added UFW rule for NTP (123/udp) — service running and configured in INBOUND_ALLOWED_SERVICES"
+            fi
         fi
     fi
 fi
@@ -162,8 +156,8 @@ ignoreip = 127.0.0.1/8
     inbound_services="${INBOUND_ALLOWED_SERVICES:-ssh}"
     recidive_ports=""
 
-    # Check for SSH service and enable sshd jail only if installed
-    if dpkg -l 2>/dev/null | grep -q "^ii.*openssh-server"; then
+    # Check for SSH service and enable sshd jail only if running
+    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "ssh.service\|sshd.service"; then
         jail_content+='[sshd]
 enabled = true
 port    = ssh
@@ -171,15 +165,15 @@ logpath = %(sshd_log)s
 backend = systemd
 
 '
-        log_info "Fail2ban: Enabled sshd jail"
+        log_info "Fail2ban: Enabled sshd jail (service running)"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bssh\b'; then
             recidive_ports="ssh"
         fi
     fi
 
-    # Check for postfix and add jails if installed
-    if dpkg -l 2>/dev/null | grep -q "^ii.*postfix"; then
+    # Check for postfix and add jails if running
+    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "postfix.service"; then
         jail_content+='[postfix-sasl]
 enabled = true
 port    = smtp,submission,imap2,imaps,pop3,pop3s
@@ -187,7 +181,7 @@ logpath = /var/log/mail.log
 backend = systemd
 
 '
-        log_info "Fail2ban: Enabled postfix-sasl jail"
+        log_info "Fail2ban: Enabled postfix-sasl jail (service running)"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             if [ -z "$recidive_ports" ]; then
