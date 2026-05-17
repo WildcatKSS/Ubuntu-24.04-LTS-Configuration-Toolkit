@@ -20,12 +20,16 @@ validate_jail_config() {
     fi
 
     # Use fail2ban-client to validate (dry-run mode)
-    if fail2ban-client -d -c "$jail_file" >/dev/null 2>&1; then
+    # -c expects a directory, so extract the directory from the jail file path
+    local config_dir
+    config_dir="$(dirname "$jail_file")"
+
+    if fail2ban-client -d -c "$config_dir" >/dev/null 2>&1; then
         return 0
     else
         # If validation fails, try to give more detail
         local errors
-        errors=$(fail2ban-client -d -c "$jail_file" 2>&1 | grep -i "error\|invalid" || echo "Unknown error")
+        errors=$(fail2ban-client -d -c "$config_dir" 2>&1 | grep -i "error\|invalid" || echo "Unknown error")
         log_error "Jail configuration invalid: $errors"
         return 1
     fi
