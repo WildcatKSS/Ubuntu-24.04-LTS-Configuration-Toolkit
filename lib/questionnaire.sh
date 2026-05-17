@@ -134,6 +134,19 @@ questionnaire_run() {
         return 0
     fi
 
+    # Load existing defaults.conf or defaults.conf.example as base for prompts
+    local TOOLKIT_ROOT="${TOOLKIT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+    local conf_defaults="${TOOLKIT_ROOT}/config/defaults.conf"
+    local conf_example="${TOOLKIT_ROOT}/config/defaults.conf.example"
+
+    if [ -f "$conf_defaults" ]; then
+        log_info "Loading existing config from $conf_defaults"
+        config_load "$conf_defaults" 2>/dev/null || true
+    elif [ -f "$conf_example" ]; then
+        log_info "Loading defaults from $conf_example"
+        config_load "$conf_example" 2>/dev/null || true
+    fi
+
     # Pre-detect network interface for use in prompts
     if [ -z "${NETWORK_INTERFACE:-}" ]; then
         export NETWORK_INTERFACE="$(detect_network_interface)"
@@ -172,7 +185,7 @@ questionnaire_run() {
                 log_info "Mode: Create new sudo user"
                 echo
 
-                ADMIN_USER=$(questionnaire_prompt_string "Username for new administrator" "admin")
+                ADMIN_USER=$(questionnaire_prompt_string "Username for new administrator" "${ADMIN_USER:-admin}")
                 export ADMIN_USER
 
                 if system_user_exists "$ADMIN_USER"; then
@@ -195,7 +208,7 @@ questionnaire_run() {
                 echo
 
                 while true; do
-                    ADMIN_USER=$(questionnaire_prompt_string "Username of existing sudo user" "root")
+                    ADMIN_USER=$(questionnaire_prompt_string "Username of existing sudo user" "${ADMIN_USER:-root}")
                     export ADMIN_USER
 
                     if system_user_exists "$ADMIN_USER"; then
@@ -231,13 +244,13 @@ questionnaire_run() {
     echo "The timezone determines local time for cron jobs and logfiles."
     echo
 
-    HOSTNAME=$(questionnaire_prompt_string "Hostname of the server" "server.local.lan")
+    HOSTNAME=$(questionnaire_prompt_string "Hostname of the server" "${HOSTNAME:-server.local.lan}")
     export HOSTNAME
 
-    TIMEZONE=$(questionnaire_prompt_string "Timezone" "Europe/Amsterdam")
+    TIMEZONE=$(questionnaire_prompt_string "Timezone" "${TIMEZONE:-Europe/Amsterdam}")
     export TIMEZONE
 
-    LOCALE=$(questionnaire_prompt_string "System language (locale)" "nl_NL.UTF-8")
+    LOCALE=$(questionnaire_prompt_string "System language (locale)" "${LOCALE:-en_US.UTF-8}")
     export LOCALE
 
     echo
@@ -258,20 +271,20 @@ questionnaire_run() {
     NETWORK_INTERFACE=$(questionnaire_prompt_string "Network interface name" "${NETWORK_INTERFACE:-ens3}")
     export NETWORK_INTERFACE
 
-    USE_DHCP=$(questionnaire_prompt_string "Use DHCP? (true/false)" "true")
+    USE_DHCP=$(questionnaire_prompt_string "Use DHCP? (true/false)" "${USE_DHCP:-true}")
     export USE_DHCP
 
     if [ "$USE_DHCP" = "false" ]; then
-        IP_ADDRESS=$(questionnaire_prompt_string "Static IP address" "192.168.1.100")
+        IP_ADDRESS=$(questionnaire_prompt_string "Static IP address" "${IP_ADDRESS:-192.168.1.100}")
         export IP_ADDRESS
 
-        PREFIX_LENGTH=$(questionnaire_prompt_string "Network prefix length (e.g. 24 for /24)" "24")
+        PREFIX_LENGTH=$(questionnaire_prompt_string "Network prefix length (e.g. 24 for /24)" "${PREFIX_LENGTH:-24}")
         export PREFIX_LENGTH
 
-        GATEWAY=$(questionnaire_prompt_string "Default gateway" "192.168.1.1")
+        GATEWAY=$(questionnaire_prompt_string "Default gateway" "${GATEWAY:-192.168.1.1}")
         export GATEWAY
 
-        DNS_SERVERS=$(questionnaire_prompt_string "DNS servers (space-separated)" "1.1.1.3 1.0.0.3")
+        DNS_SERVERS=$(questionnaire_prompt_string "DNS servers (space-separated)" "${DNS_SERVERS:-1.1.1.3 1.0.0.3}")
         export DNS_SERVERS
     fi
 
@@ -291,23 +304,23 @@ questionnaire_run() {
     echo "/etc/postfix/sasl_passwd after installation."
     echo
 
-    EMAIL_TO=$(questionnaire_prompt_string "Email address for alerts" "admin@example.com")
+    EMAIL_TO=$(questionnaire_prompt_string "Email address for alerts" "${EMAIL_TO:-admin@example.com}")
     export EMAIL_TO
 
-    SMTP_RELAY_HOST=$(questionnaire_prompt_string "SMTP relay hostname" "smtp.example.com")
+    SMTP_RELAY_HOST=$(questionnaire_prompt_string "SMTP relay hostname" "${SMTP_RELAY_HOST:-smtp.example.com}")
     export SMTP_RELAY_HOST
 
-    SMTP_RELAY_PORT=$(questionnaire_prompt_string "SMTP relay port" "587")
+    SMTP_RELAY_PORT=$(questionnaire_prompt_string "SMTP relay port" "${SMTP_RELAY_PORT:-587}")
     export SMTP_RELAY_PORT
 
-    export DISK_ALERT_THRESHOLD="85"
+    export DISK_ALERT_THRESHOLD="${DISK_ALERT_THRESHOLD:-85}"
 
     echo
     echo "After Postfix installation, a test mail can be sent to"
     echo "$EMAIL_TO to verify the mail relay works correctly."
     echo
 
-    SEND_TEST_MAIL=$(questionnaire_prompt_string "Send test mail after Postfix installation? (true/false)" "false")
+    SEND_TEST_MAIL=$(questionnaire_prompt_string "Send test mail after Postfix installation? (true/false)" "${SEND_TEST_MAIL:-false}")
     export SEND_TEST_MAIL
 
         echo
@@ -324,7 +337,7 @@ questionnaire_run() {
     echo "updated; major version upgrades always require manual action."
     echo
 
-    AUTO_SECURITY_UPDATES=$(questionnaire_prompt_string "Enable automatic security updates? (true/false)" "true")
+    AUTO_SECURITY_UPDATES=$(questionnaire_prompt_string "Enable automatic security updates? (true/false)" "${AUTO_SECURITY_UPDATES:-true}")
     export AUTO_SECURITY_UPDATES
 
     echo
