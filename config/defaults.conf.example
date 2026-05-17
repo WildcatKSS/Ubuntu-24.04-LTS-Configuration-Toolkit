@@ -54,3 +54,12 @@ DISK_ALERT_THRESHOLD=85           # % disk usage that triggers an alert
 # Unattended upgrades
 # ---------------------------------------------------------------------------
 AUTO_SECURITY_UPDATES="true"
+
+# ---------------------------------------------------------------------------
+# Firewall — inbound-allowed services
+# ---------------------------------------------------------------------------
+# Comma-separated list of services allowed inbound (from outside)
+# Available: ssh, postfix, chronyd
+# Default: only SSH (required for remote administration)
+# Note: Services must be installed AND listed here to be accessible from outside
+INBOUND_ALLOWED_SERVICES="ssh"
