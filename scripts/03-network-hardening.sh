@@ -44,20 +44,57 @@ if plan_action "ensure systemd-networkd is enabled and active"; then
 fi
 
 # 4. UFW
-if plan_action "configure UFW (default deny in / allow out, allow SSH)"; then
+if plan_action "configure UFW (default deny in / allow out, rules for active services)"; then
     pkg_install ufw
+
+    # Check if IPv6 is disabled on system
+    ipv6_disabled=0
+    if [ -f /etc/sysctl.d/99-ipv6.conf ] && grep -q 'net.ipv6.conf.all.disable_ipv6 = 1' /etc/sysctl.d/99-ipv6.conf; then
+        ipv6_disabled=1
+    fi
+
+    # Disable IPv6 in UFW config if IPv6 is disabled on system
+    if [ "$ipv6_disabled" -eq 1 ] && [ -f /etc/default/ufw ]; then
+        if grep -q '^IPV6=yes' /etc/default/ufw; then
+            sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
+            log_info "Disabled IPv6 in UFW config (/etc/default/ufw)"
+        fi
+    fi
+
     if run_quiet ufw status | grep -q 'Status: active'; then
-        log_info "UFW already active — verifying SSH rule"
+        log_info "UFW already active"
     else
         run_quiet ufw --force reset
         run_quiet ufw default deny incoming
         run_quiet ufw default allow outgoing
-        run_quiet ufw allow 22/tcp comment 'SSH'
         run_quiet ufw --force enable
-        log_info "UFW enabled with SSH rule"
+        log_info "UFW enabled with default policy"
     fi
+
+    # Allow SSH (always needed)
     if ! run_quiet ufw status | grep -q '22/tcp'; then
         run_quiet ufw allow 22/tcp comment 'SSH'
+        log_info "Added UFW rule for SSH (22/tcp)"
+    fi
+
+    # Add rules for active services
+    # Postfix (SMTP) — check if installed
+    if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
+        for port in 25 587; do
+            if ! run_quiet ufw status | grep -q "$port/tcp"; then
+                run_quiet ufw allow "$port/tcp" comment 'SMTP' || true
+                log_info "Added UFW rule for SMTP ($port/tcp)"
+            fi
+        done
+    fi
+
+    # Chrony (NTP) — check if installed
+    if systemctl list-unit-files chrony.service 2>/dev/null | grep -q chrony || \
+       systemctl list-unit-files chronyd.service 2>/dev/null | grep -q chronyd; then
+        if ! run_quiet ufw status | grep -q '123/udp'; then
+            run_quiet ufw allow 123/udp comment 'NTP' || true
+            log_info "Added UFW rule for NTP (123/udp)"
+        fi
     fi
 fi
 
