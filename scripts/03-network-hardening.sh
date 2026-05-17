@@ -179,23 +179,18 @@ backend = systemd
     if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
         jail_content+='[postfix-sasl]
 enabled = true
-port    = smtp,imap2,imaps,pop3,pop3s
-logpath = /var/log/mail.log
-backend = systemd
-
-[postfix-rate-limit]
-enabled = true
+port    = smtp,submission,imap2,imaps,pop3,pop3s
 logpath = /var/log/mail.log
 backend = systemd
 
 '
-        log_info "Fail2ban: Enabled postfix jails (postfix-sasl, postfix-rate-limit)"
+        log_info "Fail2ban: Enabled postfix-sasl jail"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             if [ -z "$recidive_ports" ]; then
-                recidive_ports="smtp,pop3,imap"
+                recidive_ports="smtp,submission,imap,pop3"
             else
-                recidive_ports="$recidive_ports,smtp,pop3,imap"
+                recidive_ports="$recidive_ports,smtp,submission,imap,pop3"
             fi
         fi
     fi
