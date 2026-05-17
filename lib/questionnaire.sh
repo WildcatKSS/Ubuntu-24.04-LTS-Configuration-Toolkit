@@ -69,7 +69,7 @@ config_create_defaults() {
     export DNS_SERVERS="1.1.1.3 1.0.0.3"
     export HOSTNAME="server.local.lan"
     export TIMEZONE="Europe/Amsterdam"
-    export LOCALE="en_US.UTF-8"
+    export LOCALE="nl_NL.UTF-8"
     export EMAIL_TO="admin@example.com"
     export SMTP_RELAY_HOST="smtp.example.com"
     export SMTP_RELAY_PORT="587"
