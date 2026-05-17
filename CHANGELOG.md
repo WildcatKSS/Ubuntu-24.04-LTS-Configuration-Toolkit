@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Releases
 
+## 1.1.10 – 2026-05-17
+
+### Added
+- **Fail2ban Jail Validation Helpers (lib/jail.sh)**
+  - New validation functions for fail2ban configuration integrity
+  - `validate_jail_config()` - Validates INI syntax using fail2ban-client
+  - `jail_section_exists()` - Check if jail section defined
+  - `jail_list_sections()` - List all jails in config
+  - `jail_port_in_section()` - Check if port in jail definition
+  - `jail_ports_match()` - Verify port consistency between jails
+  - `validate_jail_patterns()` - Check common configuration issues
+  - Reusable across all modules for fail2ban configuration management
+
+- **Service Management Helpers (lib/service.sh)**
+  - Helper functions for detecting and managing systemd services
+  - `service_is_running()` - Check if specific service is running
+  - `service_any_running()` - Check if any of multiple services running
+  - `service_list_running()` - List running services matching patterns
+  - `service_is_enabled()` - Check if service enabled on boot
+
+- **Professional README Badges**
+  - Added 8 status badges showing: License, Version, Platform, Language, Tests, Idempotency, ShellCheck, Status
+  - Improves project visibility and demonstrates quality/maturity
+
+### Fixed
+- **CRITICAL: Fail2ban Port Consistency (03-network-hardening)**
+  - Fixed postfix-sasl jail port definitions not matching recidive jail protection
+  - Postfix ports now consistent: `smtp,submission,imap2,imaps,pop3,pop3s`
+  - Same ports used in postfix-sasl jail AND recidive jail configuration
+  - Prevents security gaps where repeat offenders could bypass protection on some ports
+  - **Impact:** Critical security fix - ensures all postfix ports protected equally
+
+- **Configuration Validation Before Service Restart (03-network-hardening)**
+  - Added `validate_jail_config()` call after writing jail.local
+  - Validates generated configuration syntax before restarting fail2ban service
+  - Prevents service restarts with invalid configurations that would cause outages
+  - **Impact:** Reliability improvement - prevents configuration errors from breaking fail2ban
+
+### Improved
+- **Enhanced Fail2ban Configuration Logging**
+  - Added "Fail2ban:" prefix to all jail-related log messages for easy filtering
+  - Log each jail creation decision: created, skipped, or added to recidive
+  - Show exact ports being protected for each jail
+  - Clear logging when services running but not in INBOUND_ALLOWED_SERVICES
+
+- **Enhanced UFW Configuration Logging**
+  - Added "UFW:" prefix to all firewall-related log messages
+  - Clear messages when service running but not in inbound-allowed list
+  - Logs explain why rules are/aren't created for each service
+
+- **Code Quality**
+  - Removed redundant `backend = systemd` specifications from individual jails (inherited from [DEFAULT])
+  - Cleaner fail2ban configuration, follows INI best practices
+
 ## 1.1.9 – 2026-05-17
 
 ### Fixed
