@@ -19,12 +19,12 @@ source "$TOOLKIT_ROOT/lib/common.sh"
 PLAN_MODE="${TOOLKIT_PLAN_MODE:-0}"
 
 # 1. apt update + upgrade
-if plan_action "apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y"; then
+if plan_action "apt update && apt upgrade -y && apt dist-upgrade -y"; then
     pkg_update
-    log_info "Running apt-get upgrade"
-    run_quiet apt-get upgrade -y
-    log_info "Running apt-get dist-upgrade"
-    run_quiet apt-get dist-upgrade -y
+    log_info "Running apt upgrade"
+    run_quiet apt upgrade -y
+    log_info "Running apt dist-upgrade"
+    run_quiet apt dist-upgrade -y
 fi
 
 # 2. Admin credentials (from questionnaire or environment)
