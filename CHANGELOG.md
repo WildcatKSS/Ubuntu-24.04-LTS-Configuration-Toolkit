@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Releases
 
+## 1.1.9 – 2026-05-17
+
+### Fixed
+- **Plan Mode Credential Validation**
+  - Fixed toolkit failing when running `./main.sh --plan` without credentials configured
+  - Plan mode is read-only and should not require admin user credentials
+  - Validation now only applies during actual execution mode, not when auditing changes
+  - Allows users to preview toolkit changes without configuring credentials first
+
 ## 1.1.8 – 2026-05-15
 
 ### Fixed
