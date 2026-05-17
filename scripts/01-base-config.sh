@@ -31,11 +31,13 @@ fi
 ADMIN_MODE_CREATE_USER="${ADMIN_MODE_CREATE_USER:-yes}"
 
 if [ "$ADMIN_MODE_CREATE_USER" != "skip" ]; then
-    if [ -z "${ADMIN_USER:-}" ] || [ -z "${ADMIN_PASSWORD:-}" ]; then
+    if [ "$PLAN_MODE" != "1" ] && ([ -z "${ADMIN_USER:-}" ] || [ -z "${ADMIN_PASSWORD:-}" ]); then
         log_error "ADMIN_USER and ADMIN_PASSWORD must be set (run questionnaire or set environment)"
         exit 1
     fi
-    log_info "Admin user: $ADMIN_USER"
+    if [ -n "${ADMIN_USER:-}" ]; then
+        log_info "Admin user: $ADMIN_USER"
+    fi
 fi
 
 # 3. Handle admin user based on mode
