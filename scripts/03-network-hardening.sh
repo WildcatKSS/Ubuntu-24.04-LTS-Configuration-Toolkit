@@ -76,7 +76,7 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
 
     # Add UFW rules for services that are both running AND in inbound-allowed list
     # SSH — check if running and allowed inbound
-    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "ssh.service\|sshd.service"; then
+    if service_any_running "ssh.service" "sshd.service"; then
         if echo "$inbound_services" | grep -qo '\bssh\b'; then
             if ! run_quiet ufw status | grep -q '22/tcp'; then
                 run_quiet ufw allow 22/tcp comment 'SSH'
@@ -86,7 +86,7 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
     fi
 
     # Postfix (SMTP) — check if running and allowed inbound
-    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "postfix.service"; then
+    if service_is_running "postfix.service"; then
         if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             for port in 25 587; do
                 if ! run_quiet ufw status | grep -q "$port/tcp"; then
@@ -98,7 +98,7 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
     fi
 
     # Chrony/Chronyd (NTP) — check if running and allowed inbound (rarely needed)
-    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "chrony.service\|chronyd.service"; then
+    if service_any_running "chrony.service" "chronyd.service"; then
         if echo "$inbound_services" | grep -qo '\bchronyd\b'; then
             if ! run_quiet ufw status | grep -q '123/udp'; then
                 run_quiet ufw allow 123/udp comment 'NTP' || true
@@ -157,7 +157,7 @@ ignoreip = 127.0.0.1/8
     recidive_ports=""
 
     # Check for SSH service and enable sshd jail only if running
-    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "ssh.service\|sshd.service"; then
+    if service_any_running "ssh.service" "sshd.service"; then
         jail_content+='[sshd]
 enabled = true
 port    = ssh
@@ -173,7 +173,7 @@ backend = systemd
     fi
 
     # Check for postfix and add jails if running
-    if systemctl list-units --type=service --state=running 2>/dev/null | grep -q "postfix.service"; then
+    if service_is_running "postfix.service"; then
         jail_content+='[postfix-sasl]
 enabled = true
 port    = smtp,submission,imap2,imaps,pop3,pop3s
