@@ -224,7 +224,13 @@ maxretry = 5
     # Write the generated config
     if printf '%s' "$jail_content" > "$jail_config"; then
         log_info "Generated $jail_config with dynamic service jails"
-        systemctl restart fail2ban || log_warn "fail2ban restart failed (non-fatal)"
+
+        # Validate the generated configuration before restarting
+        if validate_jail_config "$jail_config"; then
+            systemctl restart fail2ban || log_warn "fail2ban restart failed (non-fatal)"
+        else
+            log_error "Generated jail config is invalid; skipping fail2ban restart to prevent service outage"
+        fi
     else
         log_error "Failed to write $jail_config"
     fi
