@@ -151,6 +151,18 @@ backend = %(sshd_backend)s
 
 '
 
+    # Recidive jail — punish repeat offenders across all jails
+    jail_content+='[recidive]
+enabled = true
+logpath = /var/log/fail2ban.log
+action  = iptables-multiport[name=recidive, port="http,https,ssh,smtp,pop3,imap", protocol=tcp]
+          sendmail-whois[name=recidive, dest=root@localhost]
+bantime = 86400
+findtime = 86400
+maxretry = 5
+
+'
+
     # Check for postfix and add jails if installed
     if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
         jail_content+='[postfix-sasl]
