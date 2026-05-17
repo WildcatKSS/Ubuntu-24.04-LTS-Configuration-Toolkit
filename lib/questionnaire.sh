@@ -58,6 +58,8 @@ detect_network_interface() {
 # when config file doesn't exist yet.
 config_create_defaults() {
     export ADMIN_MODE_CREATE_USER="yes"
+    export ADMIN_USER="admin"
+    export ADMIN_PASSWORD="changeme"
     export TOOLKIT_LOG_LEVEL="debug"
     export NETWORK_INTERFACE="$(detect_network_interface)"
     export USE_DHCP="true"
