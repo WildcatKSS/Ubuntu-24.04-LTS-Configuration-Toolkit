@@ -150,9 +150,9 @@ else
     log_info "Disk space ok: ${free_gb}GB free on /"
 fi
 
-# 6. Required commands
+# 6. Required commands (only those essential for preflight itself; ip/ping are installed by 05-packages)
 missing=()
-for cmd in apt-get curl ip systemctl ping awk grep sed; do
+for cmd in apt-get awk grep sed; do
     command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 done
 if [ "${#missing[@]}" -gt 0 ]; then
