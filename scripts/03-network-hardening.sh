@@ -162,7 +162,6 @@ ignoreip = 127.0.0.1/8
 enabled = true
 port    = ssh
 logpath = %(sshd_log)s
-backend = systemd
 
 '
         log_info "Fail2ban: Enabled sshd jail (service running)"
@@ -174,20 +173,21 @@ backend = systemd
 
     # Check for postfix and add jails if running
     if service_is_running "postfix.service"; then
-        jail_content+='[postfix-sasl]
+        # Define postfix ports once, reuse for both jail definition and recidive
+        postfix_ports="smtp,submission,imap2,imaps,pop3,pop3s"
+        jail_content+="[postfix-sasl]
 enabled = true
-port    = smtp,submission,imap2,imaps,pop3,pop3s
+port    = $postfix_ports
 logpath = /var/log/mail.log
-backend = systemd
 
-'
+"
         log_info "Fail2ban: Enabled postfix-sasl jail (service running)"
         # Only add to recidive if this service is inbound-allowed
         if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             if [ -z "$recidive_ports" ]; then
-                recidive_ports="smtp,submission,imap,pop3"
+                recidive_ports="$postfix_ports"
             else
-                recidive_ports="$recidive_ports,smtp,submission,imap,pop3"
+                recidive_ports="$recidive_ports,$postfix_ports"
             fi
         fi
     fi
