@@ -1,9 +1,12 @@
 # Ubuntu Server 26.04 LTS Configuration Toolkit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.1.9-blue)](./VERSION)
 [![Ubuntu 26.04 LTS](https://img.shields.io/badge/Ubuntu-26.04%20LTS-orange)](https://releases.ubuntu.com/26.04/)
 ![Bash 4.0+](https://img.shields.io/badge/bash-4.0+-blue)
+[![Tests: BATS](https://img.shields.io/badge/tests-BATS-blue)](./tests/)
 ![Idempotent](https://img.shields.io/badge/idempotent-yes-brightgreen)
+![ShellCheck](https://img.shields.io/badge/shellcheck-passing-brightgreen)
 ![Status](https://img.shields.io/badge/status-active-success)
 
 A modular bash toolkit that takes a freshly installed Ubuntu Server 26.04 LTS system
