@@ -22,5 +22,9 @@ source "$_lib_dir/pkg.sh"
 source "$_lib_dir/state.sh"
 # shellcheck source=plan.sh
 source "$_lib_dir/plan.sh"
+# shellcheck source=service.sh
+source "$_lib_dir/service.sh"
+# shellcheck source=jail.sh
+source "$_lib_dir/jail.sh"
 
 unset _lib_dir
