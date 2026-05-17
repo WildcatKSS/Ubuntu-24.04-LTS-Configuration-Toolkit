@@ -147,9 +147,11 @@ questionnaire_run() {
         config_load "$conf_example" 2>/dev/null || true
     fi
 
-    # Pre-detect network interface for use in prompts
-    if [ -z "${NETWORK_INTERFACE:-}" ]; then
-        export NETWORK_INTERFACE="$(detect_network_interface)"
+    # Always detect network interface (takes precedence over loaded defaults)
+    local detected_interface
+    detected_interface="$(detect_network_interface)"
+    if [ -n "$detected_interface" ]; then
+        export NETWORK_INTERFACE="$detected_interface"
     fi
 
     echo
