@@ -76,19 +76,21 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
 
     # Add UFW rules for services that are both installed AND in inbound-allowed list
     # SSH — check if installed and allowed inbound
-    if echo "$inbound_services" | grep -qo '\bssh\b'; then
-        if systemctl list-unit-files ssh.service 2>/dev/null | grep -q ssh || \
-           systemctl list-unit-files sshd.service 2>/dev/null | grep -q sshd; then
-            if ! run_quiet ufw status | grep -q '22/tcp'; then
-                run_quiet ufw allow 22/tcp comment 'SSH'
-                log_info "Added UFW rule for SSH (22/tcp) — configured in INBOUND_ALLOWED_SERVICES"
-            fi
+    ssh_installed=0
+    if [ -f /etc/systemd/system/ssh.service ] || [ -f /etc/systemd/system/sshd.service ] || \
+       [ -f /usr/lib/systemd/system/ssh.service ] || [ -f /usr/lib/systemd/system/sshd.service ]; then
+        ssh_installed=1
+    fi
+    if [ "$ssh_installed" -eq 1 ] && echo "$inbound_services" | grep -qo '\bssh\b'; then
+        if ! run_quiet ufw status | grep -q '22/tcp'; then
+            run_quiet ufw allow 22/tcp comment 'SSH'
+            log_info "Added UFW rule for SSH (22/tcp) — configured in INBOUND_ALLOWED_SERVICES"
         fi
     fi
 
     # Postfix (SMTP) — check if installed and allowed inbound
-    if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
-        if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
+    if [ -f /etc/systemd/system/postfix.service ] || [ -f /usr/lib/systemd/system/postfix.service ]; then
+        if echo "$inbound_services" | grep -qo '\bpostfix\b'; then
             for port in 25 587; do
                 if ! run_quiet ufw status | grep -q "$port/tcp"; then
                     run_quiet ufw allow "$port/tcp" comment 'SMTP' || true
@@ -100,8 +102,8 @@ if plan_action "configure UFW (default deny in / allow out, rules for active ser
 
     # Chronyd (NTP) — check if installed and allowed inbound (rarely needed)
     if echo "$inbound_services" | grep -qo '\bchronyd\b'; then
-        if systemctl list-unit-files chrony.service 2>/dev/null | grep -q chrony || \
-           systemctl list-unit-files chronyd.service 2>/dev/null | grep -q chronyd; then
+        if [ -f /etc/systemd/system/chrony.service ] || [ -f /etc/systemd/system/chronyd.service ] || \
+           [ -f /usr/lib/systemd/system/chrony.service ] || [ -f /usr/lib/systemd/system/chronyd.service ]; then
             if ! run_quiet ufw status | grep -q '123/udp'; then
                 run_quiet ufw allow 123/udp comment 'NTP' || true
                 log_info "Added UFW rule for NTP (123/udp) — configured in INBOUND_ALLOWED_SERVICES"
@@ -159,8 +161,8 @@ ignoreip = 127.0.0.1/8
     recidive_ports=""
 
     # Check for SSH service and enable sshd jail only if installed
-    if systemctl list-unit-files ssh.service 2>/dev/null | grep -q ssh || \
-       systemctl list-unit-files sshd.service 2>/dev/null | grep -q sshd; then
+    if [ -f /etc/systemd/system/ssh.service ] || [ -f /etc/systemd/system/sshd.service ] || \
+       [ -f /usr/lib/systemd/system/ssh.service ] || [ -f /usr/lib/systemd/system/sshd.service ]; then
         jail_content+='[sshd]
 enabled = true
 port    = ssh
@@ -176,7 +178,7 @@ backend = systemd
     fi
 
     # Check for postfix and add jails if installed
-    if systemctl list-unit-files postfix.service 2>/dev/null | grep -q postfix; then
+    if [ -f /etc/systemd/system/postfix.service ] || [ -f /usr/lib/systemd/system/postfix.service ]; then
         jail_content+='[postfix-sasl]
 enabled = true
 port    = smtp,submission,imap2,imaps,pop3,pop3s
