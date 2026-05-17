@@ -36,7 +36,7 @@ NTP_SERVERS=(
 FALLBACK_NTP="time.cloudflare.com time.google.com"
 
 TIMEZONE="Europe/Amsterdam"
-LOCALE="en_US.UTF-8"
+LOCALE="nl_NL.UTF-8"
 
 # ---------------------------------------------------------------------------
 # Email / SMTP relay
