@@ -58,7 +58,7 @@ pkg_update() {
         return 0
     fi
     log_info "Running apt update"
-    if ! run_quiet apt update -y; then
+    if ! run_quiet apt update; then
         log_error "apt update failed"
         return 1
     fi
