@@ -1,4 +1,12 @@
-# Ubuntu Server 26.04 LTS Configuration Toolkit
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║            Ubuntu Server 26.04 LTS Configuration Toolkit                    ║
+║                                                                              ║
+║   From bare metal to production-ready in one idempotent run                 ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
 
 A modular bash toolkit that takes a freshly installed Ubuntu Server 26.04 LTS system
 and configures it from bare to production-ready in one run: network, hardening,
