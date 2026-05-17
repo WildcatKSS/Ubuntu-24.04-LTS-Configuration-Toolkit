@@ -45,44 +45,44 @@ if [ "$PLAN_MODE" = "1" ]; then
     if [ "$ADMIN_MODE_CREATE_USER" = "skip" ]; then
         log_info "PLAN: skipping sudo user configuration"
     elif [ "$ADMIN_MODE_CREATE_USER" = "yes" ]; then
-        log_info "PLAN: would create user $ADMIN_USER and add to sudo group"
+        log_info "PLAN: would create user ${ADMIN_USER:-<not set>} and add to sudo group"
     else
-        log_info "PLAN: would change password for user $ADMIN_USER"
+        log_info "PLAN: would change password for user ${ADMIN_USER:-<not set>}"
     fi
 elif [ "$ADMIN_MODE_CREATE_USER" = "skip" ]; then
     log_info "Skipping sudo user configuration (user selected skip)"
 elif [ "$ADMIN_MODE_CREATE_USER" = "yes" ]; then
     # Create new sudo user
-    if system_user_exists "$ADMIN_USER"; then
-        log_info "User already exists: $ADMIN_USER"
+    if system_user_exists "${ADMIN_USER}"; then
+        log_info "User already exists: ${ADMIN_USER}"
     else
-        log_info "Creating user: $ADMIN_USER"
-        run_quiet useradd -m -s /bin/bash -G sudo "$ADMIN_USER"
+        log_info "Creating user: ${ADMIN_USER}"
+        run_quiet useradd -m -s /bin/bash -G sudo "${ADMIN_USER}"
     fi
 
     # Set password
     if [ -n "${ADMIN_PASSWORD:-}" ]; then
         echo "${ADMIN_USER}:${ADMIN_PASSWORD}" | run_quiet chpasswd
-        log_info "Password set for $ADMIN_USER"
+        log_info "Password set for ${ADMIN_USER}"
     fi
 
     # Ensure sudo group membership
-    if id -nG "$ADMIN_USER" | tr ' ' '\n' | grep -qx sudo; then
-        log_info "User $ADMIN_USER is in sudo group"
+    if id -nG "${ADMIN_USER}" | tr ' ' '\n' | grep -qx sudo; then
+        log_info "User ${ADMIN_USER} is in sudo group"
     else
-        run_quiet usermod -aG sudo "$ADMIN_USER"
-        log_info "Added $ADMIN_USER to sudo group"
+        run_quiet usermod -aG sudo "${ADMIN_USER}"
+        log_info "Added ${ADMIN_USER} to sudo group"
     fi
 else
     # Change password for existing user
-    if ! system_user_exists "$ADMIN_USER"; then
-        log_error "User does not exist: $ADMIN_USER"
+    if ! system_user_exists "${ADMIN_USER}"; then
+        log_error "User does not exist: ${ADMIN_USER}"
         exit 1
     fi
 
     if [ -n "${ADMIN_PASSWORD:-}" ]; then
         echo "${ADMIN_USER}:${ADMIN_PASSWORD}" | run_quiet chpasswd
-        log_info "Password changed for $ADMIN_USER"
+        log_info "Password changed for ${ADMIN_USER}"
     fi
 fi
 
